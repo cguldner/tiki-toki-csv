@@ -16,7 +16,7 @@ def write_to_file(csv_input_list):
     |   TKI output file has by default form MM_DD_YY Hour-Minute
     |   
     |   csv_input_list is a list, containing the different csv files desiring to convert
-    |   Timelines are recommended to have under 500 events, so use multiple if over
+    |   Timelines are recommended to have under 500 events, so use multiple .csv files if over
     """
     num_files = 0
     for file in csv_input_list:
@@ -81,7 +81,7 @@ def generate_tki_string(csv_input):
                      Tag("birth"),
                      Tag("extinction"),
                      Tag("fun-times"))
-
+    
     temp_event_list, timeline_spans = get_events(csv_input)
     
     BC_event_list, event_list = [], []
@@ -288,8 +288,13 @@ def get_events(csv_input):
 
     with open(csv_input) as file:
         reader = csv.reader(file)
-        # Skips the header line in the csv file
-        next(reader)
+        # Skips the header line in the csv file, and checks if csv is empty
+        try:
+            next(reader)
+        except StopIteration:
+            print(".csv file is empty")
+            return
+            
         for row in reader:
             # Prevents having events that have no title or subtitle
             if not(row[0] and row[2]): continue
