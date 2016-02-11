@@ -96,6 +96,9 @@ def generate_tki_string(csv_input):
     # Sorts the list of events by date
     event_list = sorted(event_list, key = lambda event: event.start_date)
     event_list = BC_event_list + event_list
+    # Puts the correct ID on each event in the sorted list
+    for count, event in enumerate(event_list):
+        event.id = count + 1
 
     # A dictionary of the different colors used in the timeline
     timeline_colors =  {"mainColour":'"A879FE"', "backgroundColour": '"1A1A1A"',
