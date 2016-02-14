@@ -1,4 +1,3 @@
-Attribute VB_Name = "Module3"
 Sub SortAndExport()
     Dim MyPath As String
     Dim CSVFileName As String
