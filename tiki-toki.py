@@ -30,7 +30,7 @@ def write_to_file(csv_input_list):
         time_generated = time.strftime("%m_%d_%y %H-%M")
         print("Time of file generation: " + time_generated)
         # Goes to the filepath Timelines/Generated/file.csv
-        tki_output = os.path.join("Timelines", "Generated", "test {} Part {}.tki".format(time_generated, num_files))
+        tki_output = os.path.join(os.path.dirname(__file__), "Timelines", "Generated", "test {} Part {}.tki".format(time_generated, num_files))
         try:
             with open(tki_output, 'w') as output_file:
                 output_file.write(opening_metadata)
@@ -285,8 +285,10 @@ def get_events(csv_input):
     # Holds the final JSON data for each event as a list item
     events = []
     spans = []
-
-    with open(csv_input) as file:
+    
+    # Get path of the current directory. Allows running the script from other directories
+    csv_filepath = os.path.join(os.path.dirname(__file__), csv_input)
+    with open(csv_filepath) as file:
         reader = csv.reader(file)
         # Skips the header line in the csv file, and checks if csv is empty
         try:
