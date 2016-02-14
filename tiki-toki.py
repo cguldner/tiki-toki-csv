@@ -9,7 +9,7 @@ from datetime import datetime
 # Defines the number of the id currently working with, to aid in error finding
 NUM_ID = 1
 
-def write_to_file(csv_input_list):
+def write_tki_file_from(csv_input_list):
     """
     |   Writes the string produced by generate_tki_string to the tki_output file
     |   Output file is written by default in filepath Timelines/Generated/file.csv
@@ -810,4 +810,4 @@ class Color:
 # End Color Class
 
 # This runs the python script
-write_to_file(["Dinosaur.csv"])
+write_tki_file_from(["Dinosaur.csv"])
