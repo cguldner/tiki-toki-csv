@@ -4,6 +4,7 @@ This is a Python script for the Tiki Toki timeline software that allows you to c
 ----------
 ## How it works
 The Python script is initially configured to work with a .csv file that has the following format:
+
 Title | Date | Intro Text | Full Description | Category | Media | Tag | Span
 ----  | ---- | ----       | ----             | ----     | ----  | --- | ----
 
