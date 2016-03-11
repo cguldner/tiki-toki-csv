@@ -14,6 +14,6 @@ The script reads in the values for each of these cells per event, and modifies t
 
 `Title`, `Intro Text`, and `Full Description` have their special characters escaped, and parses user-defined keys into a desired value. For example, since Tiki-Toki supports HTML, but there isn't an easy way to tab, when `&tab` is found, it formats to `&nbsp;&nbsp;&nbsp;&nbsp;`. So put any repetitive text in the `modifiers` list in `format_text_block` and it will be parsed.
 
-
+`Date` is first parsed according to the specified date format, which is found in `DATE_FORMAT`. By default it is `mm/dd/yyyy`. 
 
  
