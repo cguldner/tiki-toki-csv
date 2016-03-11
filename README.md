@@ -9,5 +9,6 @@ Title | Date | Intro Text | Full Description | Category | Media | Tag | Span
 ----  | ---- | ----       | ----             | ----     | ----  | --- | ----
 
 The names of the columns don't matter, but the order does. To change the order, or add in your own elements, simply go to `get_events()` and change/add another `row` element.
+The script reads in the values for each of these cells per event, and modifies them to work under a set of specifications.
 
  
