@@ -303,7 +303,7 @@ def get_events(csv_input):
     spans = []
     
     # Get path of the current directory. Allows running the script from other directories
-    csv_filepath = os.path.join(os.path.dirname(csv_input), csv_input)
+    csv_filepath = os.path.join(os.path.dirname(__file__), csv_input)
     with open(csv_filepath) as file:
         reader = csv.reader(file)
         # Skips the header line in the csv file, and checks if csv is empty
