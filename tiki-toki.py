@@ -24,7 +24,7 @@ def write_tki_file_from(csv_input_list):
         try:
             opening_metadata, event_list, closing_metadata = generate_tki_string(file)
         except (TypeError, FileNotFoundError) as error:
-            #print("\nNothing returned from method generate_tki_string()\nHalting execution: no .tki file produced")
+            print("\nNothing returned from method generate_tki_string()\nHalting execution: no .tki file produced")
             print(error)
             return
         time_generated = time.strftime("%m_%d_%y %H-%M")
@@ -50,37 +50,21 @@ def write_tki_file_from(csv_input_list):
 
 def generate_tki_string(csv_input):
     """
-    Generates the string to be written to the output file
-    Includes:
-    |   The metadata of the file
-    |   The opening metadata, in opening_metadata, includes:
-        |   List of valid categories with colors, in timeline_categories
-        |   The various relevant settings, stored in timeline_settings
-        |   The colors of the timeline, stored in timeline_colors
-    |   All of the event data, in event_list
-    |   The closing metadata, in closing_metadata, includes:
-        |   List of valid tags, in timeline_tags
-        |   List of valid spans, in timeline_spans
-    Returns the metadata and the event_list
+    |   Generates the string to be written to the output file
+    |   Includes:
+        |   The metadata of the file
+        |   The opening metadata, in opening_metadata, includes:
+            |   List of valid categories with colors, in timeline_categories
+            |   The various relevant settings, stored in timeline_settings
+            |   The colors of the timeline, stored in timeline_colors
+        |   All of the event data, in event_list
+        |   The closing metadata, in closing_metadata, includes:
+            |   List of valid tags, in timeline_tags
+            |   List of valid spans, in timeline_spans
+    |   Returns the metadata and the event_list
     """
-    # Defines the valid category names, as well as their respective colors
-    try:
-        timeline_categories = (Category("Awesome",  "F66820"),
-                               Category("Small",    "A30000"),
-                               Category("Large",    "571C4B"),
-                               Category("Fossils",  "FF00F7"),
-                               Category("Habits",   "08962E"),
-                               Category("Food",     "0000FF"),
-                               Category("Death",    "09D0BE"),
-                               Category("T-Rex",    "F51997"))
-    except ValueError as error:
-        print(error)
-        return
-    # Defines the valid tag names
-    timeline_tags = (Tag("death"),
-                     Tag("birth"),
-                     Tag("extinction"),
-                     Tag("fun-times"))
+    # Gets all of the different user-defined settings
+    timeline_categories, timeline_tags, timeline_colors, timeline_settings = settings()
     
     temp_event_list, timeline_spans = get_events(csv_input)
     
@@ -100,62 +84,13 @@ def generate_tki_string(csv_input):
     for count, event in enumerate(event_list):
         event.id = count + 1
 
-    # A dictionary of the different colors used in the timeline
-    timeline_colors =  {"mainColour":'"A879FE"', "backgroundColour": '"1A1A1A"',
-                        "sliderBackgroundColour": '"000000"', "sliderTextColour": '"808080"',
-                        "sliderDetailsColour": '"282828"', "sliderDraggerColour": '"F43B62"',
-                        "headerBackgroundColour": '"080176"', "headerTextColour": '"3DCC09"',
-                        "durHeadlineColour": '"ffffff"', "3Dcolor": "148AFF"}
     for key in timeline_colors:
         # Catches invalid color codes
         try:
             Color(timeline_colors[key].strip('"'))
         except ValueError as error:
             print('\nFor "{}" in timeline_colors, {} \n'.format(key, error))
-    # Other timeline settings, put into a list to allow for easier modifications
-    timeline_settings = {"title"            : "Timeline Example",
-                         "introText"        : 'An example of how a timeline might be implemented',
-                         "aboutText"        : "",
-                         "backgroundImage"  : Media(media_name="",media_caption=""),
-                         "introImage"       : Media(media_name="",media_caption=""),
-                         # Options (from most zoomed out to in):
-                         #   decade-VAR-year, where VAR is in [medium, large]
-                         #   year-VAR-month, where VAR is in [tiny, small, medium, large, very-large]
-                         #   month-VAR-day, where VAR is in [tincy, tiny, small, medium]
-                         "zoom"             : "month-medium-day",
-                         # Options are first, last, today, or the id of a specific event (in quotes)
-                         "initialFocus"     : "first",
-                         "public"           : "no",
-                         "dontDisplayIntroPanel" :1,
-                         # Defines how stories are spaced vertically across the timeline. Options:
-                         # 0 : Standard, 1-2 : Equal Spacing, 3-10 : Top to Bottom with n rows, n given by number 
-                         "storySpacing"     : "4",
-                         # How the stories are actually displayed. Options:
-                         # 0 - Standard, 1 - Colored Bands, 2 - Colored Stories, 3 - Duration
-                         "viewType"         : "0",
-                         # Whether vertical stripes are placed on background of timeline
-                         "displayStripes"   : 1,
-                         "cssFile"          : "",
-                         # 0 - Standard Black, 1 - White with colored borders, 2 - Disabled
-                         "lightboxStyle"    : "0",
-                         # Controls for view settings are visible
-                         "showControls"     : "1",
-                         # Load images only when they are visible on the screen
-                         # 0 - Enabled, 1 - Disabled
-                         "lazyLoading"      : 1,
-                         # 0 - Disabled, 1 - Enabled, 2 - Default
-                         "3Dstatus"         : 1,
-                         "3Dzoom"           : 0.09834,
-                         # Size of each event bubble
-                         "3Dpanelsize"      : 1400,
-                         "3Dvanishpoint"    : 0,
-                         "3Dtimelinewidth"  : 1.225,
-                         # 0 - Looking into the past, 1 - Looking into future
-                         "3Ddirection"      : 1,
-                         # Number from 1 - 9
-                         "3Dsections"       : 4,
-                         "3Dbgimageopacity" : 0.35333
-                        }
+
     # Escapes each string in the settings dictionary
     for key in timeline_settings:
         # Prevents images from being serialized
@@ -259,6 +194,85 @@ def generate_tki_string(csv_input):
 
 # End generate_tki_string
 
+def settings():
+    """
+    
+    """
+    # Defines the valid category names, as well as their respective colors
+    try:
+        categories = (Category("Awesome",  "F66820"),
+                      Category("Small",    "A30000"),
+                      Category("Large",    "571C4B"),
+                      Category("Fossils",  "FF00F7"),
+                      Category("Habits",   "08962E"),
+                      Category("Food",     "0000FF"),
+                      Category("Death",    "09D0BE"),
+                      Category("T-Rex",    "F51997"))
+    except ValueError as error:
+        print(error)
+        return
+    # Defines the valid tag names
+    tags = (Tag("death"),
+            Tag("birth"),
+            Tag("extinction"),
+            Tag("fun-times"))
+    
+    # A dictionary of the different colors used in the timeline
+    colors =  {"mainColour":'"A879FE"', "backgroundColour": '"1A1A1A"',
+               "sliderBackgroundColour": '"000000"', "sliderTextColour": '"808080"',
+               "sliderDetailsColour": '"282828"', "sliderDraggerColour": '"F43B62"',
+               "headerBackgroundColour": '"080176"', "headerTextColour": '"3DCC09"',
+               "durHeadlineColour": '"ffffff"', "3Dcolor": "148AFF"}
+                        
+    # Other timeline settings, put into a list to allow for easier modifications
+    settings =  {"title"            : "Timeline Example",
+                 "introText"        : 'An example of how a timeline might be implemented',   
+                 "aboutText"        : "",
+                 "backgroundImage"  : Media(media_name="",media_caption=""),
+                 "introImage"       : Media(media_name="",media_caption=""),
+                 # Options (from most zoomed out to in):
+                 #   decade-VAR-year, where VAR is in [medium, large]
+                 #   year-VAR-month, where VAR is in [tiny, small, medium, large, very-large]
+                 #   month-VAR-day, where VAR is in [tincy, tiny, small, medium]
+                 "zoom"             : "month-medium-day",
+                 # Options are first, last, today, or the id of a specific event (in quotes)
+                 "initialFocus"     : "first",
+                 "public"           : "no",
+                 "dontDisplayIntroPanel" :1,
+                 # Defines how stories are spaced vertically across the timeline. Options:
+                 # 0 : Standard, 1-2 : Equal Spacing, 3-10 : Top to Bottom with n rows, n given by number 
+                 "storySpacing"     : "4",
+                 # How the stories are actually displayed. Options:
+                 # 0 - Standard, 1 - Colored Bands, 2 - Colored Stories, 3 - Duration
+                 "viewType"         : "0",
+                 # Whether vertical stripes are placed on background of timeline
+                 "displayStripes"   : 1,
+                 "cssFile"          : "",
+                 # 0 - Standard Black, 1 - White with colored borders, 2 - Disabled
+                 "lightboxStyle"    : "0",
+                 # Controls for view settings are visible
+                 "showControls"     : "1",
+                 # Load images only when they are visible on the screen
+                 # 0 - Enabled, 1 - Disabled
+                 "lazyLoading"      : 1,
+                 # 0 - Disabled, 1 - Enabled, 2 - Default
+                 "3Dstatus"         : 1,
+                 "3Dzoom"           : 0.09834,
+                 # Size of each event bubble
+                 "3Dpanelsize"      : 1400,
+                 "3Dvanishpoint"    : 0,
+                 "3Dtimelinewidth"  : 1.225,
+                 # 0 - Looking into the past, 1 - Looking into future
+                 "3Ddirection"      : 1,
+                 # Number from 1 - 9
+                 "3Dsections"       : 4,
+                 "3Dbgimageopacity" : 0.35333
+                }
+    
+    return categories, tags, colors, settings
+    
+# End settings
+
 def get_events(csv_input):
     """
     |   Gets the cells of the CSV file, and puts them into their corresponding list of events
@@ -282,12 +296,14 @@ def get_events(csv_input):
     ERROR_COUNT = 0
     # What date format the events appears in the CSV as
     DATE_FORMAT = "%m/%d/%Y"
+    # The string notifying how different attributes are separated
+    SEPARATOR = ":: "
     # Holds the final JSON data for each event as a list item
     events = []
     spans = []
     
     # Get path of the current directory. Allows running the script from other directories
-    csv_filepath = os.path.join(os.path.dirname(__file__), csv_input)
+    csv_filepath = os.path.join(os.path.dirname(csv_input), csv_input)
     with open(csv_filepath) as file:
         reader = csv.reader(file)
         # Skips the header line in the csv file, and checks if csv is empty
@@ -339,7 +355,7 @@ def get_events(csv_input):
             media_cell = row[5]
             media_object = ""
             if media_cell:
-                media_cell = media_cell.split(": ")
+                media_cell = media_cell.split(SEPARATOR)
                 # Accounts for the possibility of no thumb position attribute
                 thumb_pos = media_cell[2] if len(media_cell) == 3 else ""
                 # Catches invalid file names
@@ -350,7 +366,7 @@ def get_events(csv_input):
                     ERROR_COUNT += 1
 
             # Splits the different tags according to comma
-            tag_cell = row[6].split(", ")
+            tag_cell = row[6].split(SEPARATOR)
             tag_string = ""
             # Catches tags not present in the list of valid tags
             try:
@@ -364,6 +380,7 @@ def get_events(csv_input):
                 ERROR_COUNT += 1
                 print(error)
 
+            # Creates the event
             event = Event(NUM_ID, title_cell, start_date_cell, subtitle_cell, fulldesc_cell,
                           category_cell, media_object, tag_string)
             events.append(event)
@@ -371,10 +388,11 @@ def get_events(csv_input):
             span_cell = row[7]
             # Checks for misformatted dates and colors
             try:
-                span_attr = span_cell.split(":: ")
+                span_attr = span_cell.split(SEPARATOR)
                 if len(span_attr) >= 6:
                     start_date   = datetime.strptime(span_attr[0], DATE_FORMAT)
                     end_date     = datetime.strptime(span_attr[1], DATE_FORMAT)
+                    # Allows image/image credit to be left blank
                     image        = "" if len(span_attr) < 7 else span_attr[6]
                     image_credit = "" if len(span_attr) < 8 else span_attr[7]
                     bg_color     = Color(span_attr[3])
@@ -382,6 +400,7 @@ def get_events(csv_input):
                     current_span = Span(start_date, end_date, span_attr[2], bg_color,
                                         span_attr[4], text_color, image, image_credit)
                     spans.append(current_span)
+                # Checks if there is 1 - 5 arguments. Prevents an error from being called on a span of 0 arguments
                 elif span_attr[0] and len(span_attr) > 0:
                     print("ID {}: Not enough arguments in the span column - Should be at least 6".format(NUM_ID))
                     ERROR_COUNT += 1
