@@ -2,6 +2,7 @@
 This is a Python script for the Tiki Toki timeline software that allows you to convert a .csv file to a file that will work with the software.
 
  1.  [How it works](#how-it-works)
+ 2.  [Tools](#tools)
 
 ----------
 ## How it works
@@ -26,4 +27,8 @@ The script reads in the values for each of these cells per event, and modifies t
 
 **Span** creates a `Span` object. These are not linked to a specific event, but are used as a period of time, such as a stage of life, a prehistoric time period, etc. The different attributes are separated by `:: `
 
+An `Event` takes all of the above information (besides `span`) and assembles it into a Tiki-Toki readable format. The `Event` isn't necessarily part of an event, but it allows the data from an event to be used in other places.
+
 All of the objects have a fairly decent documentation for you to learn more about what their purpose is and how to use them.
+
+##Tools
