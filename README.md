@@ -19,7 +19,7 @@ The script reads in the values for each of these cells per event, and modifies t
 
 **Title**, **Intro Text**, and **Full Description** have their special characters escaped, and parses user-defined keys into a desired value. For example, since Tiki-Toki supports HTML, but there isn't an easy way to tab, when `&tab` is found, it formats to `&nbsp;&nbsp;&nbsp;&nbsp;`. So put any repetitive text in the `modifiers` list in `format_text_block` and it will be parsed.
 
-**Date** is first parsed according to the specified date format, which is found in `DATE_FORMAT`. By default it is `mm/dd/yyyy`.  The script also formats dates in BC correctly. Then, the date is checked to see if an event already exists with that date; this can be removed if multiple events on the same day is desired.
+**Date** is first parsed according to the specified date format, which is found in `DATE_FORMAT`. By default it is `mm/dd/yyyy`.  The script also formats dates in BC correctly; the script looks for " BC" (including space), but it can be found anywhere in the string. Then, the date is checked to see if an event already exists with that date; this can be removed if multiple events on the same day is desired.
 
 **Category** creates a `Category` object. This checks the provided category against the pre-defined list of `timeline_categories`. If it doesn't match, it will return an error. Each category in the pre-defined list is assigned a `category_int`, which is then associated with the category to the event.
 
@@ -45,6 +45,5 @@ All of the objects have a fairly decent documentation for you to learn more abou
  6. The attribute separator is `:: `
 
 ----------
-
 
 ##Tools
