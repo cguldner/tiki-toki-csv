@@ -47,4 +47,11 @@ All of the objects have a fairly decent documentation for you to learn more abou
 ----------
 
 ##Tools
-Coming soon
+**Sort_and_Export.bas** - This is an Microsoft Excel VBA Bash script for use with an .xlsm file that does a couple different functions.
+
+ - Sorts the entries based on the date
+ - Autofits the cells
+ - Allows the user to enter in the name of the .csv file
+ - Checks if file already exists and verifies overwriting
+ - Exports the .xlsm as a .csv file
+
