@@ -33,8 +33,18 @@ Sub SortAndExport()
     '
     ' Copys the current sheet. Must be before other stuff
     WB1.ActiveSheet.UsedRange.Copy
+
+    ' Get name of csv file
+    CSVFileName = Application.InputBox("Enter the name of the .csv file", "Enter title")
+    ' Continue if not invalid (prevents type mismatch)
+    If CSVFileName <> "" Then GoTo Continue
+    If CSVFileName = "" Then
+        MsgBox ("Invalid Name")
+        Exit Sub
+    Else: If CSVFileName = False Then Exit Sub
+    End If
     
-    CSVFileName = "Dinosaur"
+Continue:
     ' Adds .csv to filename if not already on it
     If Not Right(CSVFileName, 4) = ".csv" Then CSVFileName = CSVFileName & ".csv"
     FullPath = WB1.Path & "\" & CSVFileName
@@ -59,5 +69,3 @@ Sub SortAndExport()
     ' Re-enables default alerts
     Application.DisplayAlerts = True
 End Sub
-
-
