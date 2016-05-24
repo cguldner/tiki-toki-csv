@@ -19,8 +19,9 @@ def write_tki_file_from(csv_input_list):
     |   csv_input_list is a list, containing the different csv files desiring to convert
     |   Timelines are recommended to have under 500 events, so use multiple .csv files if over
     """
-    if len(csv_input_list) < 1:
-        print("Correct call is \"python pyscript.py file1.csv file2.csv ...\"")
+    if len(csv_input_list) < 2:
+        print("Invalid arguments - Correct format: python {} file1.csv file2.csv ...".format(csv_input_list[0]))
+        return
         
     num_files = 0
     for file in csv_input_list:
@@ -833,4 +834,4 @@ class Color:
 # End Color Class
 
 # This runs the python script
-write_tki_file_from(sys.argv[1:])
+write_tki_file_from(sys.argv)
