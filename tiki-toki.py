@@ -4,6 +4,7 @@ import json
 import os
 import re
 import time
+import sys
 from datetime import datetime
 
 # Defines the number of the id currently working with, to aid in error finding
@@ -18,6 +19,9 @@ def write_tki_file_from(csv_input_list):
     |   csv_input_list is a list, containing the different csv files desiring to convert
     |   Timelines are recommended to have under 500 events, so use multiple .csv files if over
     """
+    if len(csv_input_list) < 1:
+        print("Correct call is \"python pyscript.py file1.csv file2.csv ...\"")
+        
     num_files = 0
     for file in csv_input_list:
         num_files += 1
@@ -829,4 +833,4 @@ class Color:
 # End Color Class
 
 # This runs the python script
-write_tki_file_from(["Dinosaur.csv"])
+write_tki_file_from(sys.argv[1:])
