@@ -16,16 +16,16 @@ extinction
 fun-times
 
 Colors
-mainColour					"A879FE"
-backgroundColour			"1A1A1A"
-sliderBackgroundColour		"000000"
-sliderTextColour			"808080"
-sliderDetailsColour			"282828"
-sliderDraggerColour			"F43B62"
-headerBackgroundColour		"080176"
-headerTextColour			"3DCC09"
-durHeadlineColour			"ffffff"
-3Dcolor						148AFF
+mainColour                  "A879FE"
+backgroundColour            "1A1A1A"
+sliderBackgroundColour      "000000"
+sliderTextColour            "808080"
+sliderDetailsColour         "282828"
+sliderDraggerColour         "F43B62"
+headerBackgroundColour      "080176"
+headerTextColour            "3DCC09"
+durHeadlineColour           "ffffff"
+3Dcolor                     148AFF
 
 Other
 title                       Timeline Example
