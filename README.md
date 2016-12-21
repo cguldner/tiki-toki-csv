@@ -1,11 +1,25 @@
 # Tiki Toki .csv Plugin
 This is a Python script for the Tiki Toki timeline software that allows you to convert a .csv file to a file that will work with the software.
 
- 1. [How it works](#how-it-works)
- 2. [Assumptions](#assumptions)
- 3. [Tools](#tools)
+ 1. [Getting set up](#getting-set-up)
+ 2. [How it works](#how-it-works)
+ 3. [Assumptions](#assumptions)
+ 4. [Tools](#tools)
 
 ----------
+
+##Getting set up
+###Requirements
+Python 3.0+
+
+###How to use
+Most of the "heavy" work is going to be making sure your CSV file is in a format that the reader is expecting. You will also need to create a *settings.txt* file, you can look at the provided file for an example.
+
+Once this has been done, simply run the file
+
+    python tiki-toki.py a.csv b.csv
+
+Where a.csv & b.csv are the files you are trying to convert. You can include as many as you want.
 
 ## How it works
 The Python script is initially configured to work with a .csv file that has the following format:
