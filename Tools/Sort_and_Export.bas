@@ -5,7 +5,7 @@ Sub SortAndExport()
     Dim Sheet1 As Worksheet
     
     Set WB1 = ActiveWorkbook
-    Set Sheet1 = ActiveWorkbook.Worksheets(1)
+    Set Sheet1 = WB1.Worksheets(1)
     
     '
     ' SortDates Macro

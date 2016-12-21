@@ -1,17 +1,41 @@
 $location = Get-Location
 # Gets the path of the parent directory
+# If the file is in the same directory as the .xlsm file, change all $parent to $location
 $parent   = (get-item $location ).parent.FullName
-$file     = "$parent\ExcelDino.xlsm"
 $excel    = new-object -comobject excel.application
 
-$workbook = $excel.workbooks.open($file)
-$worksheet = $workbook.worksheets.item(1)
+# Gets the files with extension .xlsm
+$excelFiles = Get-ChildItem -Path $parent -Recurse -ErrorAction SilentlyContinue -Filter *.xlsm |
+  Where-Object { $_.Extension -eq '.xlsm' }
+
+if ($excelFiles.Count -gt 1) {
+    $excelFiles
+    "`n"
+    $prompt = "Enter a file name"
+    do {
+        $path = (Read-Host $prompt)
+        $path = "$parent\$path"
+        $wrong = -NOT (Test-Path $path)
+        $prompt = "This file does not exist. Try again."
+    } while ($wrong)
+}
+else {
+    # Gets the only file with the extension in the parent directory
+    $path = Get-ChildItem -Path $parent -ErrorAction SilentlyContinue -Filter *.xlsm
+}
+
+$workbook = $excel.workbooks.open($path)
 # Runs the macro that sorts and exports the excel file to .csv
-$excel.Run("DinoSortExport")
+$excel.Run("SortAndExport")
 $workbook.save()
 $workbook.close()
 
-python "../tiki-toki.py"
+$python = Get-ChildItem -Path $parent -ErrorAction SilentlyContinue -Filter *.py
+$csv = Get-ChildItem -Path $parent -ErrorAction SilentlyContinue -Filter *.csv
+"`n"
+# Can't figure out how to run as list, so this is easiest way
+Foreach($file in $csv) {
+    python $parent\$python $parent\$file
+}
 
 $excel.quit
-pause

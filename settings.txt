@@ -1,0 +1,72 @@
+Categories
+Awesome     F66822
+Small       A30000
+Large       571C4B
+Fossils     FF00F7
+Habits      08962E
+Food        0000FF
+Death       09D0BE
+T-Rex       F51997
+Fun times   F32453
+
+Tags
+death
+birth
+extinction
+fun-times
+
+Colors
+mainColour					"A879FE"
+backgroundColour			"1A1A1A"
+sliderBackgroundColour		"000000"
+sliderTextColour			"808080"
+sliderDetailsColour			"282828"
+sliderDraggerColour			"F43B62"
+headerBackgroundColour		"080176"
+headerTextColour			"3DCC09"
+durHeadlineColour			"ffffff"
+3Dcolor						148AFF
+
+Other
+title                       Timeline Example
+introText                   An example of how a timeline might be implemented
+aboutText                   
+backgroundImage             ,
+introImage                  ,
+# Options (from most zoomed out to in):
+#   decade-VAR-year, where VAR is in [medium, large]
+#   year-VAR-month, where VAR is in [tiny, small, medium, large, very-large]
+#   month-VAR-day, where VAR is in [tincy, tiny, small, medium]
+zoom                        month-medium-day
+# Options are first, last, today, or the id of a specific event (in quotes)
+initialFocus                first
+public                      no
+dontDisplayIntroPanel       1
+# Defines how stories are spaced vertically across the timeline. Options:
+# 0 : Standard, 1-2 : Equal Spacing, 3-10 : Top to Bottom with n rows, n given by number 
+storySpacing                4
+# How the stories are actually displayed. Options:
+# 0 - Standard, 1 - Colored Bands, 2 - Colored Stories, 3 - Duration
+viewType                    0
+# Whether vertical stripes are placed on background of timeline
+displayStripes              1
+cssFile                     
+# 0 - Standard Black, 1 - White with colored borders, 2 - Disabled
+lightboxStyle               0
+# Controls for view settings are visible
+showControls                1
+# Load images only when they are visible on the screen
+# 0 - Enabled, 1 - Disabled
+lazyLoading                 1
+# 0 - Disabled, 1 - Enabled, 2 - Default
+3Dstatus                    1
+3Dzoom                      0.09834
+# Size of each event bubble
+3Dpanelsize                 1400
+3Dvanishpoint               0
+3Dtimelinewidth             1.225
+# 0 - Looking into the past, 1 - Looking into future
+3Ddirection                 1
+# Number from 1 - 9
+3Dsections                  4
+3Dbgimageopacity            0.35333
