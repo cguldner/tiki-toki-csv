@@ -13,12 +13,13 @@ NUM_ID = 1
 
 def write_tki_file_from(csv_input_list):
     """
-    |   Writes the string produced by generate_tki_string to the tki_output file
-    |   Output file is written by default in filepath Timelines/Generated/file.csv
-    |   TKI output file has by default form MM_DD_YY Hour-Minute
-    |   
-    |   csv_input_list is a list, containing the different csv files desiring to convert
-    |   Timelines are recommended to have under 500 events, so use multiple .csv files if over
+    Writes the string produced by generate_tki_string to the tki_output file
+    Output file is written by default in filepath Timelines/Generated/file.csv
+    TKI output file has by default form MM_DD_YY Hour-Minute
+
+    :param list csv_input_list: Contains the different csv files desiring to convert
+
+    .. note:: Timelines are recommended to have under 500 events, so use multiple .csv files if over
     """
 
     if len(csv_input_list) < 1:
@@ -63,18 +64,22 @@ def write_tki_file_from(csv_input_list):
 
 def generate_tki_string(csv_input):
     """
-    |   Generates the string to be written to the output file
-    |   Includes:
-        |   The metadata of the file
-        |   The opening metadata, in opening_metadata, includes:
-            |   List of valid categories with colors, in timeline_categories
-            |   The various relevant settings, stored in timeline_settings
-            |   The colors of the timeline, stored in timeline_colors
-        |   All of the event data, in event_list
-        |   The closing metadata, in closing_metadata, includes:
-            |   List of valid tags, in timeline_tags
-            |   List of valid spans, in timeline_spans
-    |   Returns the metadata and the event_list
+    Generates the string to be written to the output file
+
+    Includes:
+        - The metadata of the file
+        - The opening metadata, which includes:
+            - List of valid categories with colors, in timeline_categories
+            - The various relevant settings, stored in timeline_settings
+            - The colors of the timeline, stored in timeline_colors
+        - All of the event data, in event_list
+        - The closing metadata, which includes:
+            - List of valid tags, in timeline_tags
+            - List of valid spans, in timeline_spans
+
+    :param string csv_input: The name of the file to generate the .tki string from
+    :rtype: tuple
+    :return: metadata, eventlist
     """
     # Gets all of the different user-defined settings
     timeline_categories, timeline_tags, timeline_colors, timeline_settings = settings()
@@ -214,7 +219,10 @@ def generate_tki_string(csv_input):
 
 def settings():
     """
-    |   Reads in the categories, tags, colors, and other settings from the settings file
+    Reads in the categories, tags, colors, and other settings from the settings file
+
+    :rtype: tuple
+    :returns: list of the categories, list of tags, dictionary of colors, and dictionary of other settings
     """
     categories = []
     tags = []
@@ -268,21 +276,25 @@ def settings():
 
 def get_events(csv_input):
     """
-    |   Gets the cells of the CSV file, and puts them into their corresponding list of events
-    |   Since spans are independent of the events, the list of spans is returned separately
-    |   The CSV has the following format by default:
-        |   Title | Start Date | Subtitle | Full Description | Category | Media | Tag(s) | Span(s)
-    |   Can easily be expanded to include other attributes, such as an end date
+    Gets the cells of the CSV file, and puts them into their corresponding list of events
+    Since spans are independent of the events, the list of spans is returned separately
+    The CSV has the following format by default:
 
-    |   Returns:
-        |   A list of the event data
-        |   The spans present in the timeline
+    +-------+------------+----------+------------------+----------+-------+--------+---------+
+    | Title | Start Date | Subtitle | Full Description | Category | Media | Tag(s) | Span(s) |
+    +=======+============+==========+==================+==========+=======+========+=========+
+    |       |            |          |                  |          |       |        |         |
+    +-------+------------+----------+------------------+----------+-------+--------+---------+
 
-    |   Exceptions are handled by printing to console, and asking if user wishes to continue
-    |   Raises:
-        |   ValueError: If two events have the same date
-        |   KeyError:   If a category or tag is not in the list of valid ones
-        |   Various errors can be raised from Media class
+    Can easily be expanded to include other attributes, such as an end date
+
+    :param string csv_input: The name of the file to generate the .tki string from
+    :rtype: tuple
+    :return: A list of the event data, The spans present in the timeline
+    :raises ValueError: If two events have the same date
+    :raises KeyError:   If a category or tag is not in the list of valid ones
+
+    .. note:: Exceptions are handled by printing to console, and asking if user wishes to continue
     """
     global NUM_ID
     # Defines the number of errors that have occurred during execution while fetching event data
@@ -420,20 +432,20 @@ def get_events(csv_input):
 
 # End get_events
 
-def format_text_block(string):
-    """
-    |   Modifiers are defined to convert into a format that the software can understand
-        |   &tab; - 4 n-sized spaces, essentially a tab with format &nbsp;&nbsp;&nbsp;&nbsp;
-        |   \n    - A new line character, but the software defines it as ;xNLx;
-    |   Escapes special chars that might break the timeline software by calling json.dumps().
-    |   Allows for further expansion
-    |   Arguments:
-        |   string (string): The string that we want to replace the matches in
-    |   Returns:
-        |   A string with the user defined values replaced by the timeline specific ones
+def format_text_block(replace_str):
+    r"""
+    Modifiers are defined to convert into a format that the software can understand
+        - ``&tab;`` 4 n-sized spaces, essentially a tab with format &nbsp;&nbsp;&nbsp;&nbsp;
+        - ``\n`` A new line character, but the software defines it as ;xNLx;
+    Escapes special chars that might break the timeline software by calling json.dumps().
+    Allows for further expansion
+
+    :param string replace_str: The string that we want to replace the matches in
+    :rtype: string
+    :return: A string with the user defined values replaced by the timeline specific ones
     """
     # Escapes special and newline chars
-    string = json.dumps(string)
+    string = json.dumps(replace_str)
     # Add shorthand text you would use often in the
     # Title, Subtitle, or Description attributes
     modifiers = {"&tab;": "&nbsp;&nbsp;&nbsp;&nbsp;",
@@ -447,16 +459,17 @@ def format_text_block(string):
 
 class Event:
     """
-    |   Holds event data for one single event
-    |   Attributes
-        |   id (int): The identifier for the event. Only one event per number
-        |   title (string): The main name of the event
-        |   start_date (string): When the event started/ended
-        |   subtitle (string): A little more insight into the event
-        |   fulldesc (string): The entire description of what happened during the event
-        |   category (int): Which category the event belongs to
-        |   media (Media): Optional- An image to go with the event
-        |   tag (int): Optional- Which tags are associated with the image
+    Holds event data for one single event
+
+    :param int event_id: The identifier for the event. Only one event per number
+    :param string title: The main name of the event
+    :param string start_date: When the event started
+    :param string end_date: When the event ended
+    :param string subtitle: A little more insight into the event
+    :param string fulldesc: The entire description of what happened during the event
+    :param int category: Which category the event belongs to
+    :param Media media: Optional- An image to go with the event
+    :param int tag: Optional- Which tags are associated with the image
     """
 
     def __init__(self, event_id, title, start_date, end_date, subtitle, fulldesc, category, media, tag):
@@ -472,7 +485,7 @@ class Event:
 
     def __str__(self):
         """
-        |   Returns event as a string that is friendly with Tiki-Toki software
+        Returns event as a string that is friendly with Tiki-Toki software
         """
         return '\n\t\t{' + \
                '\n\t\t\t"id": {}'.format(self.id) + \
@@ -495,13 +508,14 @@ class Event:
 
 class Category:
     """
-    |   A category consists of a user-defined name and color
-    |   Attributes
-        |   str_name (string): Name of the category
-        |   color (string): What color is associated with the category
-        |   valid (bool): Whether the Category will be added to a list of valid categories
-        |   category_int (int): The integer that the category corresponds to (used in event data)
+    A category consists of a user-defined name and color
+
+    :param string str_name: Name of the category
+    :param string color: What color is associated with the category
+    :param bool valid: Whether the Category will be added to a list of valid categories
+    :param int category_int: The integer that the category corresponds to (used in event data)
     """
+
     # The category ID for a category defined as one of the valid category choices
     VALID_CATEGORY_ID = 0
     # The list of valid category options
@@ -509,14 +523,14 @@ class Category:
 
     def __init__(self, str_name, color="#FFFFFF", valid=True):
         """
-        |   If valid is true:
-            |   The category must have the color defined
-            |   It will be used for the opening metadata
-            |   Category integer will be automatically assigned by the constructor
-        |   If valid is false:
-            |   It will be used for individual events
-            |   They are brought in from the csv file
-            |   Name must match one of the categories in the VALID_CATEGORIES list
+        If valid is true:
+            - The category must have the color defined
+            - It will be used for the opening metadata
+            - Category integer will be automatically assigned by the constructor
+        If valid is false:
+            - It will be used for individual events
+            - They are brought in from the csv file
+            - Name must match one of the categories in the VALID_CATEGORIES list
         """
         self.str_name = str_name
         # If a category has the valid property as true, it is going to be for the opening metadata
@@ -531,18 +545,15 @@ class Category:
                 raise ValueError('For category "{}", the color code "{}" is invalid.'.format(self.str_name, color))
         # These categories are brought in from the csv file
         else:
-            try:
-                # Gets the category integer from the matching entry in the VALID_CATEGORIES list
-                if self.str_name in Category.VALID_CATEGORIES:
-                    self.category_int = Category.VALID_CATEGORIES[self.str_name]
-                else:
-                    raise KeyError('ID {}: Category "{}" is undefined.'.format(NUM_ID, self.str_name))
-            except KeyError as error:
-                raise error
+            # Gets the category integer from the matching entry in the VALID_CATEGORIES list
+            if self.str_name in Category.VALID_CATEGORIES:
+                self.category_int = Category.VALID_CATEGORIES[self.str_name]
+            else:
+                raise KeyError('ID {}: Category "{}" is undefined.'.format(NUM_ID, self.str_name))
 
     def __str__(self):
         """
-        |   Returns the full category description, to be used in the opening metadata
+        Returns the full category description, to be used in the opening metadata
         """
         return '\n\t\t{' + \
                '\n\t\t\t"id":{}'.format(self.category_int) + \
@@ -559,12 +570,13 @@ class Category:
 
 class Tag:
     """
-    |   A tag consists of a user-defined name
-    |   Attributes
-        |   str_name (string): Name of the tag
-        |   valid (bool): Whether the tag will be added to a list of valid tags
-        |   tag_int (int): The integer that the tag corresponds to (used in event data)
+    A tag consists of a user-defined name
+
+    :param string str_name: Name of the tag
+    :param bool valid: Whether the tag will be added to a list of valid tags
+    :param int tag_int: The integer that the tag corresponds to (used in event data)
     """
+
     # Category ID for a category defined as one of the valid category choices
     VALID_TAG_ID = 0
     # The list of valid category options
@@ -572,13 +584,13 @@ class Tag:
 
     def __init__(self, str_name="", valid=True):
         """
-        |   If valid is true:
-            |   It will be used for the closing metadata
-            |   Its' tag integer will be automatically assigned by the constructor
-        |   If valid is false:
-            |   It will be used for individual events
-            |   They are brought in from the csv file
-            |   The name must match one of the tags in the VALID_TAGS list
+        If valid is true:
+            - It will be used for the closing metadata
+            - Its' tag integer will be automatically assigned by the constructor
+        If valid is false:
+            - It will be used for individual events
+            - They are brought in from the csv file
+            - The name must match one of the tags in the VALID_TAGS list
         """
         self.str_name = str_name
         # Inititally set to None to prevent error if no Tag is present for that event
@@ -590,20 +602,16 @@ class Tag:
             # Adds the tag to the list of possible valid tag choices
             Tag.VALID_TAGS[self.str_name] = self.tag_int
         else:
-            try:
-                if self.str_name in Tag.VALID_TAGS:
-                    self.tag_int = Tag.VALID_TAGS[self.str_name]
-                else:
-                    raise KeyError('ID {}: Tag "{}" is undefined.'.format(NUM_ID, self.str_name))
-            except KeyError as error:
-                raise error
+            if self.str_name in Tag.VALID_TAGS:
+                self.tag_int = Tag.VALID_TAGS[self.str_name]
+            else:
+                raise KeyError('ID {}: Tag "{}" is undefined.'.format(NUM_ID, self.str_name))
 
     def __str__(self):
         """
         Returns the full tag description, to be used in the closing metadata
         """
-        if not self.str_name:
-            return ""
+        if not self.str_name: return ""
         return '\n\t\t{' + \
                '\n\t\t\t"id": {}'.format(self.tag_int) + \
                ',\n\t\t\t"text": ' + json.dumps(self.str_name) + \
@@ -614,17 +622,17 @@ class Tag:
 
 class Span:
     """
-    |   A span is a duration of time where one encapsulating event was taking place
-    |   Examples are Winter Vacation, time period, presidency, etc.
-    |   Attributes
-        |   start_date (string): The date that the span begins
-        |   end_date (string): The date that the span ends
-        |   title (string): The title of the span
-        |   bgcolor (string): The background color
-        |   opacity (string): How visible the image is behind the color
-        |   text_color (string): Color of the informative text (title, dates, etc.)
-        |   image (string): Name of the image to serve as the background
-        |   image_credit (string): Any credit that might need to be given for the image
+    A span is a duration of time where one encapsulating event was taking place
+    Examples are Winter Vacation, time period, presidency, etc.
+
+    :param string start_date: The date that the span begins
+    :param string end_date: The date that the span ends
+    :param string title: The title of the span
+    :param string bgcolor: The background color
+    :param string opacity: How visible the image is behind the color
+    :param string text_color: Color of the informative text (title, dates, etc.)
+    :param string image: Name of the image to serve as the background
+    :param string image_credit: Any credit that might need to be given for the image
     """
     SPAN_ID = 0
     # Show the title and date info in top left corner, 0 - Enabled, 1 - Disabled
@@ -636,8 +644,7 @@ class Span:
     # Whether to show the color/image of the span in the slider, # 0 - Disabled, 1 - Enabled
     SHOW_IN_SLIDER = 1
 
-    def __init__(self, start_date, end_date, title, bgcolor,
-                 opacity, text_color, image="", image_credit=""):
+    def __init__(self, start_date, end_date, title, bgcolor, opacity, text_color, image="", image_credit=""):
         Span.SPAN_ID += 1
         self.id = Span.SPAN_ID
         self.start_date = start_date
@@ -669,35 +676,35 @@ class Span:
 # End Span Class
 
 class Media:
-    """
-    |   A media object is either an image or an audio file.
-    |   
-    |   Due to limitations of the Chrome app sandbox, audio files must be selected via the file browser
-    |   directly in Tiki-Toki. An audio media object will generate all the correct code, but you will
-    |   have to reload the audio file once you are in the software
-    |   
-    |   A few assumptions are made about media files:
-        |   1. All image files are .jpg, all audio files are .mp3
-        |   2. All media files are stored in \res
-        |   3. For audio files, the thumbnail has the same name as the audio, but with the .jpg extension
-    |   
-    |   A media object is intended to be used in 2 different ways:
-        |   Media(media_name, media_caption, media_thumb_position, increment=True)
-            |   This generates a media object with a filename, caption, and thumb position
-        |   Media(media_name, media_credit)
-            |   Intended to be used for images only
-            |   Used in places not in a timeline event, such as for spans or the intro
-    |   
-    |   Attributes:
-        |   media_name (string): The filename of the media
-        |   media_id (int): Individual ID for the media - only used for media in event data
-        |   media_caption (string): Short sentence to describe the picture
-        |   media_thumb_position (string): Positioning of thumbnail when in smaller frames, default "0,0"
-        |   media_type (string): Either "Image" or "Audio"
-        |   external_media_thumb (string): LocalFile://"audio thumbnail name" for audio files, blank otherwise
-        |   external_media_type (string): "file" for audio files, blank otherwise
-        |   media_data_uri (string): The base64 encoding of the image
-        |   media_credit (string): Credit given for the image
+    r"""
+    A media object is either an image or an audio file.
+
+    A few assumptions are made about media files:
+        - All image files are .jpg, all audio files are .mp3
+        - All media files are stored in ``\res``
+        - For audio files, the thumbnail has the same name as the audio, but with the .jpg extension
+
+    A media object is intended to be used in 2 different ways:
+        ``Media(media_name, media_caption, media_thumb_position, increment=True)``
+            - This generates a media object with a filename, caption, and thumb position
+        ``Media(media_name, media_credit)``
+            - Intended to be used for images only
+            - Used in places not in a timeline event, such as for spans or the intro
+
+    :param string media_name: The filename of the media
+    :param int media_id: Individual ID for the media - only used for media in event data
+    :param string media_caption: Short sentence to describe the picture
+    :param string media_thumb_position: Positioning of thumbnail when in smaller frames, default "0,0"
+    :param string media_type: Either "Image" or "Audio"
+    :param string external_media_thumb: ``LocalFile://"audio thumbnail name"`` for audio files, blank otherwise
+    :param string external_media_type: "file" for audio files, blank otherwise
+    :param string media_data_uri: The base64 encoding of the image
+    :param string media_credit: Credit given for the image
+    :param bool increment: Whether the creation of the media object will increment the media id
+
+    .. note:: Due to limitations of the Chrome app sandbox, audio files must be selected via the file browser
+        directly in Tiki-Toki. An audio media object will generate all the correct code, but you will
+        have to reload the audio file once you are in the software
     """
     IMAGE_EXTENSION = "jpg"
     AUDIO_EXTENTION = "mp3"
@@ -732,8 +739,8 @@ class Media:
 
     def __str__(self):
         """
-        |   Turns media object into string compatible with the software
-        |   Only valid when using with the event data
+        Turns media object into string compatible with the software
+        Only valid when using with the event data
         """
         if not self.media_name: return ""
         media_src = self.media_name
@@ -757,9 +764,12 @@ class Media:
 
     def get_media_type(self):
         """
-        |   Compares file extension of the media to preset file extensions
-        |   Returns:
-            |  The media type, either 'Image' or 'Audio'
+        Compares file extension of the media to preset file extensions
+
+        :rtype: string
+        :return: The media type, either 'Image' or 'Audio'
+        :raises IndexError: If the file has no extension
+        :raises ValueError: If the file extension is not one of the defined extensions
         """
         if not self.media_name: return ""
         try:
@@ -779,7 +789,6 @@ class Media:
 
         :rtype: String
         :return: "x,y" , where x and y are floats
-
         :raises ValueError: if x or y are not between -1 and 1
         """
         if not thumb_pos:
@@ -823,9 +832,9 @@ class Media:
 
 class Color:
     """
-    |   A three or six digit hexadecimal number used as a color code
-    |   Allows for a universal way to check if color codes are valid
-    |   Used everywhere a color is defined for an entity
+    A three or six digit hexadecimal number used as a color code
+    Allows for a universal way to check if color codes are valid
+    Used everywhere a color is defined for an entity
     """
 
     def __init__(self, color):
