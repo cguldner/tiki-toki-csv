@@ -229,45 +229,46 @@ def settings():
     colors = {}
     settings = {}
     with open("settings.txt") as settings_file:
-        # Skips first line
-        next(settings_file)
-        # Defines the valid category names, as well as their respective colors
         for line in settings_file:
-            if not line.strip(): continue
-            if line.rstrip() == "Tags": break
-            # Splits line based on 2 or more spaces, allows for multi-word categories
-            name, color = re.split("\s{2,}", line)
-            categories.append(Category(name, color.rstrip()))
+            line = line.strip()
+            # Skip blank lines or lines starting with #
+            if not line or line[0] is '#': continue
+            # Advance to the next section
+            if line in ("Categories", "Tags", "Colors", "Other"):
+                cur_section = line
+                continue
 
-        # Defines the valid tag names
-        for line in settings_file:
-            line = line.rstrip()
-            if not line: continue
-            if line == "Colors": break
-            tags.append(Tag(line))
+            if cur_section == "Categories":
+                # Splits line based on 2 or more spaces, allows for multi-word categories
+                name, color = re.split("\s{2,}", line)
+                categories.append(Category(name, color.rstrip()))
 
-        # A dictionary of the different colors used in the timeline
-        for line in settings_file:
-            if not line.strip(): continue
-            if line.rstrip() == "Other": break
-            name, color = line.split(None, 2)
-            colors[name] = color
+            elif cur_section == "Tags":
+                tags.append(Tag(line))
 
-        # Other timeline settings, put into a list to allow for easier modifications
-        for line in settings_file:
-            # Allows for comments
-            if not line.strip() or line[0] is '#': continue
-            name, value = re.split("\s{2,}", line)
-            value = value.rstrip()
-            try:
-                value = float(value)
-            except ValueError as e:
-                pass
-            # Calls the Media constructor if it is one of the image settings
-            if "Image" in line:
-                # Creates a list, and iterates over it using the list items as args
-                value = Media(*(value.replace('"', '').split(",")))
-            settings[name] = value
+            elif cur_section == "Colors":
+                name, color = line.split(None, 2)
+                colors[name] = color
+
+            elif cur_section == "Other":
+                setting = re.split("\s{2,}", line)
+                # Check that there is actually a value to the given property
+                if len(setting) <= 1:
+                    settings[setting[0]] = ""
+                    continue
+                name, value = setting
+                try:
+                    value = float(value)
+                except ValueError as e:
+                    pass
+                # Calls the Media constructor if it is one of the image settings
+                if "Image" in line:
+                    # Creates a list, and iterates over it using the list items as args
+                    value = Media(*(value.replace('"', '').split(",")))
+                settings[name] = value
+
+            else:
+                raise ValueError("Setting in unknown section {} in settings file".format(cur_section))
 
     return categories, tags, colors, settings
 
