@@ -89,16 +89,15 @@ def generate_tki_string(csv_input):
     BC_event_list, event_list = [], []
     for count, event in enumerate(temp_event_list):
         # If " BC" is found, then add it to a separate list in order to sort it correctly
-        if event.start_date.lower().find(" bc") >= 0 or event.start_date.lower().find(" b.c.") >= 0:
+        if event.start_date.find(" BC") >= 0:
             BC_event_list.append(event)
         else:
             event_list.append(event)
 
     # Sorts BC events backwards by removing the BC from the date and sorting
-    BC_event_list = sorted(BC_event_list, key=lambda event: event.start_date.lower().strip(" bc").strip(" b.c."),
-                           reverse=True)
+    BC_event_list = sorted(BC_event_list, key = lambda event: event.start_date.strip(" BC"), reverse = True)
     # Sorts the list of events by date
-    event_list = sorted(event_list, key=lambda event: event.start_date)
+    event_list = sorted(event_list, key = lambda event: event.start_date)
     event_list = BC_event_list + event_list
     # Puts the correct ID on each event in the sorted list
     for count, event in enumerate(event_list):
@@ -332,9 +331,10 @@ def get_events(csv_input):
 
             # Catches misformatted dates, and multiple dates that match
             try:
-                BC_string = " BC" if " BC" in start_date_cell else ""
+                BC_string = " BC" if " bc" in start_date_cell.lower() or " b.c." in start_date_cell.lower() else ""
                 # Default Date format is 05/4/2012, 11/18/0020, etc.
-                start_date_cell = datetime.strptime(start_date_cell.strip(" BC"), DATE_FORMAT)
+                # Removes " BC" or any form with lower case letters/periods
+                start_date_cell = datetime.strptime(re.sub(" [b|B]\.?[c|C]\.?", "", start_date_cell), DATE_FORMAT)
                 # Puts date in format that timeline software desires
                 start_date_cell = start_date_cell.strftime("%Y-%m-%d %H:%M:%S")
                 if BC_string:
@@ -356,7 +356,7 @@ def get_events(csv_input):
             # Catches Categories not in the list of valid categories
             try:
                 # Creates a category object out of the string defined for that event
-                category_cell = Category(category_cell.strip(), valid=False).category_int
+                category_cell = Category(category_cell.strip(), valid = False).category_int
             except KeyError as error:
                 category_cell = 0
                 ERROR_COUNT += 1
@@ -651,7 +651,7 @@ class Span:
         self.start_date = start_date
         self.end_date = end_date
         self.title = title
-        self.image = Media(image, media_credit=image_credit)
+        self.image = Media(image, media_credit = image_credit)
         self.bgcolor = bgcolor
         self.opacity = opacity
         self.text_color = text_color
