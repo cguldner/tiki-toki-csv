@@ -11,13 +11,14 @@ from datetime import datetime
 NUM_ID = 1
 
 
-def write_tki_file_from(csv_input_list):
+def write_tki_file_from(csv_input_list, beautify=True):
     """
     Writes the string produced by generate_tki_string to the tki_output file
     Output file is written by default in filepath Timelines/Generated/file.csv
     TKI output file has by default form MM_DD_YY Hour-Minute
 
     :param list csv_input_list: Contains the different csv files desiring to convert
+    :param bool beautify: Whether to beautify the outputted JSON
 
     .. note:: Timelines are recommended to have under 500 events, so use multiple .csv files if over
     """
@@ -48,16 +49,26 @@ def write_tki_file_from(csv_input_list):
                                   "test {} Part {}.tki".format(time_generated, num_files))
         # Write all the data
         with open(tki_output, 'w') as output_file:
-            output_file.write(opening_metadata)
+            output = ""
+            output += opening_metadata
 
             # Iterates over list, puts indices in a list of count,event
             for count, event in enumerate(event_list):
-                output_file.write(str(event))
+                output += str(event)
                 # Adds comma to all but the last event entered
                 if count != NUM_ID - 2:
-                    output_file.write(",")
+                    output += ","
 
-            output_file.write(closing_metadata)
+            output += closing_metadata
+
+            output = json.loads(output)
+            output_file.write("var TLTimelineData = ")
+            # Output the file, based on whether it should be beautified
+            # TODO: Make this not mess up order
+            if beautify:
+                output_file.write(json.dumps(output, indent = 4))
+            else:
+                output_file.write(json.dumps(output))
 
 
 # End write_to_file
@@ -117,7 +128,7 @@ def generate_tki_string(csv_input):
             timeline_settings[key] = json.dumps(timeline_settings[key])
 
     # Metadata that will be printed at the beginning of the file
-    opening_metadata = r'var TLTimelineData = {"homePage":false' \
+    opening_metadata = r'{"homePage":false' \
                        ',"showAdBlock":"false"' \
                        ',"id":1' \
                        ',"title":' + timeline_settings["title"] + \
@@ -190,10 +201,11 @@ def generate_tki_string(csv_input):
             opening_metadata += ","
     # Adds the last of the needed opening metadata
     opening_metadata += '],"feeds":[],"stories":['
+
     # Indents the metadata according to commas between attributes
-    opening_metadata = re.sub(re.compile(r'({|,|\[)\s?("|{)'), u"\g<1>\n\t\g<2>", opening_metadata)
+    # opening_metadata = re.sub(re.compile(r'({|,|\[)\s?("|{)'), u"\g<1>\n\t\g<2>", opening_metadata)
     # Adds spaces after colons that are after quotes
-    opening_metadata = re.sub(re.compile(r'":'), u"\": ", opening_metadata)
+    # opening_metadata = re.sub(re.compile(r'":'), u"\": ", opening_metadata)
 
     # String printed at closing_metadata of file
     closing_metadata = '\n\t],\n\t"spans": ['
@@ -488,21 +500,21 @@ class Event:
         """
         Returns event as a string that is friendly with Tiki-Toki software
         """
-        return '\n\t\t{' + \
-               '\n\t\t\t"id": {}'.format(self.id) + \
-               ',\n\t\t\t"ownerId": "100"' + \
-               ',\n\t\t\t"ownerName": ""' + \
-               ',\n\t\t\t"title": ' + self.title + \
-               ',\n\t\t\t"startDate": "{}"'.format(self.start_date) + \
-               ',\n\t\t\t"endDate": "{}"'.format(self.end_date) + \
-               ',\n\t\t\t"text": ' + self.subtitle + \
-               ',\n\t\t\t"fullText": ' + self.fulldesc + \
-               ',\n\t\t\t"category": {}'.format(self.category) + \
-               ',\n\t\t\t"dateFormat": "auto"' + \
-               ',\n\t\t\t"externalLink": ""' + \
-               ',\n\t\t\t"media": [{}]'.format(self.media) + \
-               ',\n\t\t\t"tags": "{}"'.format(self.tag) + \
-               '\n\t\t}'
+        return '{' + \
+               '"id": {}'.format(self.id) + \
+               ',"ownerId": "100"' + \
+               ',"ownerName": ""' + \
+               ',"title": ' + self.title + \
+               ',"startDate": "{}"'.format(self.start_date) + \
+               ',"endDate": "{}"'.format(self.end_date) + \
+               ',"text": ' + self.subtitle + \
+               ',"fullText": ' + self.fulldesc + \
+               ',"category": {}'.format(self.category) + \
+               ',"dateFormat": "auto"' + \
+               ',"externalLink": ""' + \
+               ',"media": [{}]'.format(self.media) + \
+               ',"tags": "{}"'.format(self.tag) + \
+               '}'
 
 
 # End Event Class
@@ -556,15 +568,15 @@ class Category:
         """
         Returns the full category description, to be used in the opening metadata
         """
-        return '\n\t\t{' + \
-               '\n\t\t\t"id":{}'.format(self.category_int) + \
-               ',\n\t\t\t"title":' + json.dumps(self.str_name) + \
-               ',\n\t\t\t"colour":"{}"'.format(self.color) + \
-               ',\n\t\t\t"layout":"0"' + \
-               ',\n\t\t\t"rows":"3"' + \
-               ',\n\t\t\t"order":"10"' + \
-               ',\n\t\t\t"size":"10"' + \
-               '\n\t\t}'
+        return '{' + \
+               '"id":{}'.format(self.category_int) + \
+               ',"title":' + json.dumps(self.str_name) + \
+               ',"colour":"{}"'.format(self.color) + \
+               ',"layout":"0"' + \
+               ',"rows":"3"' + \
+               ',"order":"10"' + \
+               ',"size":"10"' + \
+               '}'
 
 
 # End Category class
@@ -613,10 +625,10 @@ class Tag:
         Returns the full tag description, to be used in the closing metadata
         """
         if not self.str_name: return ""
-        return '\n\t\t{' + \
-               '\n\t\t\t"id": {}'.format(self.tag_int) + \
-               ',\n\t\t\t"text": ' + json.dumps(self.str_name) + \
-               '\n\t\t}'
+        return '{' + \
+               '"id": {}'.format(self.tag_int) + \
+               ',"text": ' + json.dumps(self.str_name) + \
+               '}'
 
 
 # End Tag Class
@@ -657,21 +669,21 @@ class Span:
         self.text_color = text_color
 
     def __str__(self):
-        return '\n\t\t{' + \
-               '\n\t\t\t"id": {}'.format(self.id) + \
-               ',\n\t\t\t"start": "{}"'.format(self.start_date) + \
-               ',\n\t\t\t"end": "{}"'.format(self.end_date) + \
-               ',\n\t\t\t"title": ' + json.dumps(self.title) + \
-               ',\n\t\t\t"image": "{}"'.format(self.image.media_name) + \
-               ',\n\t\t\t"imageDataUri": "{}"'.format(self.image.media_data_uri) + \
-               ',\n\t\t\t"color": "{}"'.format(self.bgcolor) + \
-               ',\n\t\t\t"opacity": "{}"'.format(self.opacity) + \
-               ',\n\t\t\t"showText": {}'.format(Span.SHOW_TEXT) + \
-               ',\n\t\t\t"textColor": "{}"'.format(self.text_color) + \
-               ',\n\t\t\t"imageCredit": "{}"'.format(self.image.media_credit) + \
-               ',\n\t\t\t"style": {}'.format(Span.STYLE) + \
-               ',\n\t\t\t"showInSlider": {}'.format(Span.SHOW_IN_SLIDER) + \
-               '\n\t\t}'
+        return '{' + \
+               '"id": {}'.format(self.id) + \
+               ',"start": "{}"'.format(self.start_date) + \
+               ',"end": "{}"'.format(self.end_date) + \
+               ',"title": ' + json.dumps(self.title) + \
+               ',"image": "{}"'.format(self.image.media_name) + \
+               ',"imageDataUri": "{}"'.format(self.image.media_data_uri) + \
+               ',"color": "{}"'.format(self.bgcolor) + \
+               ',"opacity": "{}"'.format(self.opacity) + \
+               ',"showText": {}'.format(Span.SHOW_TEXT) + \
+               ',"textColor": "{}"'.format(self.text_color) + \
+               ',"imageCredit": "{}"'.format(self.image.media_credit) + \
+               ',"style": {}'.format(Span.STYLE) + \
+               ',"showInSlider": {}'.format(Span.SHOW_IN_SLIDER) + \
+               '}'
 
 
 # End Span Class
@@ -748,19 +760,19 @@ class Media:
         # Appends LocalFile:// to the media source if the file is Audio
         if self.media_type == "Audio":
             media_src = "LocalFile://" + media_src
-        media_str = '\n\t\t\t{' + \
-                    '\n\t\t\t\t"id": {}'.format(self.media_id) + \
-                    ',\n\t\t\t\t"src": "' + media_src + \
-                    '",\n\t\t\t\t"caption": "' + self.media_caption + \
-                    '",\n\t\t\t\t"type": "' + self.media_type + \
-                    '",\n\t\t\t\t"thumbPosition": "' + self.media_thumb_position + \
-                    '",\n\t\t\t\t"externalMediaThumb": "' + self.external_media_thumb + \
-                    '",\n\t\t\t\t"externalMediaType": "' + self.external_media_type + \
-                    '",\n\t\t\t\t"externalMediaId": "' + self.external_media_type + \
-                    '",\n\t\t\t\t"orderIndex": 10' + \
-                    ',\n\t\t\t\t"mediaDataUri": ' + self.media_data_uri + \
-                    '",\n\t\t\t\t"bookmarkData": ""' + \
-                    '\n\t\t\t}'
+        media_str = '{' + \
+                    '"id": {}'.format(self.media_id) + \
+                    ',"src": "' + media_src + \
+                    '","caption": "' + self.media_caption + \
+                    '","type": "' + self.media_type + \
+                    '","thumbPosition": "' + self.media_thumb_position + \
+                    '","externalMediaThumb": "' + self.external_media_thumb + \
+                    '","externalMediaType": "' + self.external_media_type + \
+                    '","externalMediaId": "' + self.external_media_type + \
+                    '","orderIndex": 10' + \
+                    ',"mediaDataUri": ' + self.media_data_uri + \
+                    '",\t"bookmarkData": ""' + \
+                    '}'
         return media_str
 
     def get_media_type(self):
@@ -851,4 +863,4 @@ class Color:
 # End Color Class
 
 # This runs the python script
-write_tki_file_from(sys.argv[1:])
+write_tki_file_from(sys.argv[1:], False)
