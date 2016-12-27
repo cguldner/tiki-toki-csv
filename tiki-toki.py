@@ -25,7 +25,7 @@ def write_tki_file_from(csv_input_list, beautify=True):
 
     if len(csv_input_list) < 1:
         print("Usage: python <file.py> <file1.csv> <file2.csv> ...".format(csv_input_list))
-        csv_input_list = input("\nEnter file names separated by a space: ").split(" ")
+        csv_input_list = input("\nEnter csv file names separated by a space: ").split(" ")
 
     num_files = 0
     for file in csv_input_list:
@@ -71,8 +71,6 @@ def write_tki_file_from(csv_input_list, beautify=True):
                 output_file.write(json.dumps(output))
 
 
-# End write_to_file
-
 def generate_tki_string(csv_input):
     """
     Generates the string to be written to the output file
@@ -97,19 +95,19 @@ def generate_tki_string(csv_input):
 
     temp_event_list, timeline_spans = get_events(csv_input)
 
-    BC_event_list, event_list = [], []
+    bc_event_list, event_list = [], []
     for count, event in enumerate(temp_event_list):
         # If " BC" is found, then add it to a separate list in order to sort it correctly
         if event.start_date.find(" BC") >= 0:
-            BC_event_list.append(event)
+            bc_event_list.append(event)
         else:
             event_list.append(event)
 
     # Sorts BC events backwards by removing the BC from the date and sorting
-    BC_event_list = sorted(BC_event_list, key = lambda event: event.start_date.strip(" BC"), reverse = True)
+    bc_event_list = sorted(bc_event_list, key = lambda ev: ev.start_date.strip(" BC"), reverse = True)
     # Sorts the list of events by date
-    event_list = sorted(event_list, key = lambda event: event.start_date)
-    event_list = BC_event_list + event_list
+    event_list = sorted(event_list, key = lambda ev: ev.start_date)
+    event_list = bc_event_list + event_list
     # Puts the correct ID on each event in the sorted list
     for count, event in enumerate(event_list):
         event.id = count + 1
@@ -226,8 +224,6 @@ def generate_tki_string(csv_input):
     return opening_metadata, event_list, closing_metadata
 
 
-# End generate_tki_string
-
 def settings():
     """
     Reads in the categories, tags, colors, and other settings from the settings file
@@ -269,8 +265,9 @@ def settings():
                     continue
                 name, value = setting
                 try:
+                    # TODO: change this if problem
                     value = float(value)
-                except ValueError as e:
+                except ValueError:
                     pass
                 # Calls the Media constructor if it is one of the image settings
                 if "Image" in line:
@@ -283,8 +280,6 @@ def settings():
 
     return categories, tags, colors, settings
 
-
-# End settings
 
 def get_events(csv_input):
     """
@@ -307,6 +302,7 @@ def get_events(csv_input):
     :raises KeyError:   If a category or tag is not in the list of valid ones
 
     .. note:: Exceptions are handled by printing to console, and asking if user wishes to continue
+    .. seealso:: Event
     """
     global NUM_ID
     # Defines the number of errors that have occurred during execution while fetching event data
@@ -343,15 +339,15 @@ def get_events(csv_input):
 
             # Catches misformatted dates, and multiple dates that match
             try:
-                BC_string = " BC" if " bc" in start_date_cell.lower() or " b.c." in start_date_cell.lower() else ""
+                bc_string = " BC" if " bc" in start_date_cell.lower() or " b.c." in start_date_cell.lower() else ""
                 # Default Date format is 05/4/2012, 11/18/0020, etc.
                 # Removes " BC" or any form with lower case letters/periods
-                start_date_cell = datetime.strptime(re.sub(" [b|B]\.?[c|C]\.?", "", start_date_cell), DATE_FORMAT)
+                start_date_cell = datetime.strptime(re.sub(' [b|B]\.?[c|C]\.?', "", start_date_cell), DATE_FORMAT)
                 # Puts date in format that timeline software desires
                 start_date_cell = start_date_cell.strftime("%Y-%m-%d %H:%M:%S")
-                if BC_string:
+                if bc_string:
                     # Put the date in the format 2012 BC-05-18 if BC is in the date from the CSV
-                    start_date_cell = start_date_cell[:4] + BC_string + start_date_cell[4:]
+                    start_date_cell = start_date_cell[:4] + bc_string + start_date_cell[4:]
                 # Check if there is already an event with this date
                 # Can remove if desiring to have multiple events on one day
                 for count, item in enumerate(events):
@@ -439,11 +435,9 @@ def get_events(csv_input):
         print("\nOh no! The script compiled successfully, but you have {} errors to fix!".format(ERROR_COUNT))
         choice = input("Do you wish to continue? Y/N: ")
         if choice not in ("Y", "y"): return
-    if ERROR_COUNT == 0: print("Successfully obtained all event data from {}. No errors.".format(csv_input))
+    if ERROR_COUNT == 0: print("Successfully obtained all event data from {}. No errors.!!".format(csv_input))
     return events, spans
 
-
-# End get_events
 
 def format_text_block(replace_str):
     r"""
@@ -461,14 +455,14 @@ def format_text_block(replace_str):
     string = json.dumps(replace_str)
     # Add shorthand text you would use often in the
     # Title, Subtitle, or Description attributes
-    modifiers = {"&tab;": "&nbsp;&nbsp;&nbsp;&nbsp;",
-                 "\\n"  : ";xNLx;"}
+    modifiers = {
+        "&tab;": "&nbsp;&nbsp;&nbsp;&nbsp;",
+        "\\n"  : ";xNLx;"
+    }
     for key, value in modifiers.items():
         string = string.replace(key, value)
     return string
 
-
-# End format_text_block
 
 class Event:
     """
@@ -516,8 +510,6 @@ class Event:
                ',"tags": "{}"'.format(self.tag) + \
                '}'
 
-
-# End Event Class
 
 class Category:
     """
@@ -579,8 +571,6 @@ class Category:
                '}'
 
 
-# End Category class
-
 class Tag:
     """
     A tag consists of a user-defined name
@@ -631,19 +621,17 @@ class Tag:
                '}'
 
 
-# End Tag Class
-
 class Span:
     """
     A span is a duration of time where one encapsulating event was taking place
     Examples are Winter Vacation, time period, presidency, etc.
 
-    :param string start_date: The date that the span begins
-    :param string end_date: The date that the span ends
+    :param datetime start_date: The date that the span begins
+    :param datetime end_date: The date that the span ends
     :param string title: The title of the span
-    :param string bgcolor: The background color
+    :param Color bgcolor: The background color
     :param string opacity: How visible the image is behind the color
-    :param string text_color: Color of the informative text (title, dates, etc.)
+    :param Color text_color: Color of the informative text (title, dates, etc.)
     :param string image: Name of the image to serve as the background
     :param string image_credit: Any credit that might need to be given for the image
     """
@@ -663,7 +651,7 @@ class Span:
         self.start_date = start_date
         self.end_date = end_date
         self.title = title
-        self.image = Media(image, media_credit = image_credit)
+        self.bgimage = Media(image, media_credit = image_credit)
         self.bgcolor = bgcolor
         self.opacity = opacity
         self.text_color = text_color
@@ -674,19 +662,17 @@ class Span:
                ',"start": "{}"'.format(self.start_date) + \
                ',"end": "{}"'.format(self.end_date) + \
                ',"title": ' + json.dumps(self.title) + \
-               ',"image": "{}"'.format(self.image.media_name) + \
-               ',"imageDataUri": "{}"'.format(self.image.media_data_uri) + \
+               ',"image": "{}"'.format(self.bgimage.media_name) + \
+               ',"imageDataUri": "{}"'.format(self.bgimage.media_data_uri) + \
                ',"color": "{}"'.format(self.bgcolor) + \
                ',"opacity": "{}"'.format(self.opacity) + \
                ',"showText": {}'.format(Span.SHOW_TEXT) + \
                ',"textColor": "{}"'.format(self.text_color) + \
-               ',"imageCredit": "{}"'.format(self.image.media_credit) + \
+               ',"imageCredit": "{}"'.format(self.bgimage.media_credit) + \
                ',"style": {}'.format(Span.STYLE) + \
                ',"showInSlider": {}'.format(Span.SHOW_IN_SLIDER) + \
                '}'
 
-
-# End Span Class
 
 class Media:
     r"""
@@ -752,7 +738,7 @@ class Media:
 
     def __str__(self):
         """
-        Turns media object into string compatible with the software
+        Turns media object into string compatible with the software.
         Only valid when using with the event data
         """
         if not self.media_name: return ""
@@ -777,7 +763,7 @@ class Media:
 
     def get_media_type(self):
         """
-        Compares file extension of the media to preset file extensions
+        Compares file extension of the media to preset file extensions.
 
         :rtype: string
         :return: The media type, either 'Image' or 'Audio'
@@ -787,7 +773,7 @@ class Media:
         if not self.media_name: return ""
         try:
             media_ext = self.media_name.rsplit(".", 1)[1]
-        except IndexError as error:
+        except IndexError:
             raise IndexError("ID {}: A valid file has a file extension".format(NUM_ID))
         if media_ext == Media.IMAGE_EXTENSION:
             return "Image"
@@ -825,7 +811,6 @@ class Media:
         :rtype: string
         :return: Base64 encoding for the media file.
         """
-        if not self.media_name: return ""
         if self.media_type == "Image":
             open_media_thumbnail = open(os.path.join("res", self.media_name), "rb")
         elif self.media_type == "Audio":
@@ -834,6 +819,8 @@ class Media:
             except FileNotFoundError:
                 raise FileNotFoundError(
                         "ID {}: Audio file \"{}\" doesn't have accompanying thumbnail.".format(NUM_ID, self.media_name))
+        else:
+            return ""
         # Encodes the image, and converts it to a string
         encoding = str(base64.b64encode(open_media_thumbnail.read()))
         # Strips the quotes and the leading r
@@ -841,13 +828,11 @@ class Media:
         return data_uri
 
 
-# End Media Class
-
 class Color:
     """
-    A three or six digit hexadecimal number used as a color code
-    Allows for a universal way to check if color codes are valid
-    Used everywhere a color is defined for an entity
+    A three or six digit hexadecimal number used as a color code.
+    Allows for a universal way to check if color codes are valid.
+    Used everywhere a color is defined for an entity.
     """
 
     def __init__(self, color):
@@ -859,8 +844,6 @@ class Color:
     def __str__(self):
         return self.color
 
-
-# End Color Class
 
 # This runs the python script
 write_tki_file_from(sys.argv[1:], False)
