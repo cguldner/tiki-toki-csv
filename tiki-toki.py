@@ -36,11 +36,10 @@ def write_tki_file_from(csv_input_list, beautify=True):
                 print("{} is empty".format(file))
                 continue
             # Gets all the data to write to the file
-            opening_metadata, event_list, closing_metadata = generate_tki_string(file)
+            metadata = generate_tki_string(file)
         except (TypeError, FileNotFoundError) as error:
             print("\nNothing returned from method generate_tki_string()\nHalting execution: no .tki file produced")
-            print(error)
-            continue
+            raise error
 
         time_generated = time.strftime("%m_%d_%y %H-%M")
         print("Time of file generation: " + time_generated)
@@ -49,26 +48,17 @@ def write_tki_file_from(csv_input_list, beautify=True):
                                   "test {} Part {}.tki".format(time_generated, num_files))
         # Write all the data
         with open(tki_output, 'w') as output_file:
-            output = ""
-            output += opening_metadata
-
-            # Iterates over list, puts indices in a list of count,event
-            for count, event in enumerate(event_list):
-                output += str(event)
-                # Adds comma to all but the last event entered
-                if count != NUM_ID - 2:
-                    output += ","
-
-            output += closing_metadata
-
-            output = json.loads(output)
             output_file.write("var TLTimelineData = ")
             # Output the file, based on whether it should be beautified
-            # TODO: Make this not mess up order
             if beautify:
-                output_file.write(json.dumps(output, indent = 4))
+                meta_string = json.dumps(metadata, indent = 4)
             else:
-                output_file.write(json.dumps(output))
+                meta_string = json.dumps(metadata)
+            # Get the location of the homePage value
+            home_index = meta_string.index('"homePage"') + len('"homePage": ')
+            # Lowercase the homePage value - timeline will not work otherwise
+            meta_string = meta_string[:home_index] + meta_string[home_index].lower() + meta_string[home_index+1:]
+            output_file.write(meta_string)
 
 
 def generate_tki_string(csv_input):
@@ -115,113 +105,95 @@ def generate_tki_string(csv_input):
     for key in timeline_colors:
         # Catches invalid color codes
         try:
-            Color(timeline_colors[key].strip('"'))
+            Color(timeline_colors[key])
         except ValueError as error:
             print('\nFor "{}" in timeline_colors, {} \n'.format(key, error))
+
+    metadata = {
+        # User defined
+        "startDate"             : event_list[0].start_date,
+        "endDate"               : event_list[-1].start_date,
+        "urlFriendlyTitle"      : timeline_settings["title"].replace(" ", "-"),
+        # These need to be in a specific order
+        "settings3d"            : [
+            timeline_settings["3Dstatus"],
+            timeline_colors["3Dcolor"],
+            timeline_settings["3Dzoom"],
+            timeline_settings["3Dpanelsize"],
+            timeline_settings["3Dvanishpoint"],
+            timeline_settings["3Dtimelinewidth"],
+            timeline_settings["3Ddirection"],
+            timeline_settings["3Dsections"],
+            timeline_settings["3Dbgimageopacity"]
+        ],
+
+        "mainColour"            : timeline_colors["mainColour"],
+        "backgroundColour"      : timeline_colors["backgroundColour"],
+        "sliderBackgroundColour": timeline_colors["sliderBackgroundColour"],
+        "sliderTextColour"      : timeline_colors["sliderTextColour"],
+        "sliderDetailsColour"   : timeline_colors["sliderDetailsColour"],
+        "sliderDraggerColour"   : timeline_colors["sliderDraggerColour"],
+        "headerBackgroundColour": timeline_colors["headerBackgroundColour"],
+        "headerTextColour"      : timeline_colors["headerTextColour"],
+        "durHeadlineColour"     : timeline_colors["durHeadlineColour"],
+
+        "backgroundImage"       : timeline_settings["backgroundImage"].media_name,
+        "backgroundImageDataUri": timeline_settings["backgroundImage"].media_data_uri,
+        "backgroundImageCredit" : timeline_settings["backgroundImage"].media_credit,
+        "introImage"            : timeline_settings["introImage"].media_name,
+        "introImageDataUri"     : timeline_settings["introImage"].media_data_uri,
+        "introImageCredit"      : timeline_settings["introImage"].media_credit,
+
+        # Needed, but keeping generic
+        "feeds"                 : [],
+        "homePage"              : False,
+        "openReadMoreLinks"     : 1,
+        "storyDateStatus"       : 0,
+        "showTitleBlock"        : 1,
+        "storyDateFormat"       : "MMM ddnn, YYYY",
+        "topDateFormat"         : "WKD, MMMM ddnn, YYYY",
+        "sliderDateFormat"      : "auto",
+        "language"              : "english",
+        "htmlFormatting"        : 1,
+        "expander"              : "2",
+        "fontBase"              : '\\"Goudy Old Style\\", Garamond, \\"Big Caslon\\", \\"Times New Roman\\", serif;"',
+        "fontHead"              : '\\"Franklin Gothic Medium\\", \\"Franklin Gothic\\\", \\"ITC Franklin Gothic\\", Arial, sans-serif;"',
+        "fontBody"              : 'Arial, \\"Helvetica Neue\\", Helvetica, sans-serif;"',
+
+        # Not sure if needed
+        "autoPlay"              : "0,5,5",
+        "altFlickrImageUrl"     : "",
+        "showGroupAuthorNames"  : "0",
+        "showAdBlock"           : "false",
+        "authorName"            : "",
+        "id"                    : 1,
+        "accountType"           : "Teacher",
+        "feed"                  : "",
+        "embedHash"             : "7546004423",
+        "embed"                 : "false",
+        "secret"                : "false",
+        "bgStyle"               : "0",
+        "bgScale"               : 100,
+    }
 
     # Escapes each string in the settings dictionary
     for key in timeline_settings:
         # Prevents images from being serialized
         if key not in ("introImage", "backgroundImage"):
+            # All settings are named after their key, so just add them automatically
+            if "3D" not in key:
+                metadata[key] = timeline_settings[key]
             timeline_settings[key] = json.dumps(timeline_settings[key])
 
-    # Metadata that will be printed at the beginning of the file
-    opening_metadata = r'{"homePage":false' \
-                       ',"showAdBlock":"false"' \
-                       ',"id":1' \
-                       ',"title":' + timeline_settings["title"] + \
-                       ',"urlFriendlyTitle":' + timeline_settings["title"].replace(" ", "-") + \
-                       ',"startDate":"{}"'.format(event_list[0].start_date) + \
-                       ',"endDate":"{}"'.format(event_list[-1].start_date) + \
-                       ',"introText":' + timeline_settings["introText"] + \
-                       ',"aboutText":' + timeline_settings["aboutText"] + \
-                       ',"authorName":""' \
-                       ',"accountType":"Teacher"' \
-                       ',"backgroundImage":"{}"'.format(timeline_settings["backgroundImage"].media_name) + \
-                       ',"backgroundImageDataUri":"{}"'.format(
-                               timeline_settings["backgroundImage"].media_data_uri[1:]) + \
-                       ',"backgroundImageCredit":"{}"'.format(timeline_settings["backgroundImage"].media_credit) + \
-                       ',"introImage":"{}"'.format(timeline_settings["introImage"].media_name) + \
-                       ',"introImageDataUri":"{}"'.format(timeline_settings["introImage"].media_data_uri[1:]) + \
-                       ',"introImageCredit":"{}"'.format(timeline_settings["introImage"].media_credit) + \
-                       ',"feed":""' \
-                       ',"mainColour":' + timeline_colors["mainColour"] + \
-                       ',"zoom":' + timeline_settings["zoom"] + \
-                       ',"initialFocus":' + timeline_settings["initialFocus"] + \
-                       ',"embedHash":"7546004423"' \
-                       ',"embed":"false"' \
-                       ',"secret":"false"' \
-                       ',"public":' + timeline_settings["public"] + \
-                       ',"dontDisplayIntroPanel":' + timeline_settings["dontDisplayIntroPanel"] + \
-                       ',"openReadMoreLinks":1' \
-                       ',"storyDateStatus":0' \
-                       ',"storySpacing":' + timeline_settings["storySpacing"] + \
-                       ',"viewType":' + timeline_settings["viewType"] + \
-                       ',"showTitleBlock":1' \
-                       ',"backgroundColour":' + timeline_colors["backgroundColour"] + \
-                       ',"storyDateFormat":"MMM ddnn, YYYY"' \
-                       ',"topDateFormat":"WKD, MMMM ddnn, YYYY"' \
-                       ',"sliderDateFormat":"auto"' \
-                       ',"language":"english"' \
-                       ',"displayStripes":' + timeline_settings["displayStripes"] + \
-                       ',"htmlFormatting":1' + \
-                       ',"sliderBackgroundColour":' + timeline_colors["sliderBackgroundColour"] + \
-                       ',"sliderTextColour":' + timeline_colors["sliderTextColour"] + \
-                       ',"sliderDetailsColour":' + timeline_colors["sliderDetailsColour"] + \
-                       ',"sliderDraggerColour":' + timeline_colors["sliderDraggerColour"] + \
-                       ',"headerBackgroundColour":' + timeline_colors["headerBackgroundColour"] + \
-                       ',"headerTextColour":' + timeline_colors["headerTextColour"] + \
-                       ',"showGroupAuthorNames":"0"' \
-                       ',"durHeadlineColour":' + timeline_colors["durHeadlineColour"] + \
-                       ',"cssFile":' + timeline_settings["cssFile"] + \
-                       ',"altFlickrImageUrl":""' \
-                       ',"fontBase":"\\"Goudy Old Style\\", Garamond, \\"Big Caslon\\", \\"Times New Roman\\", serif;"' \
-                       ',"fontHead":"\\"Franklin Gothic Medium\\", \\"Franklin Gothic\\\", \\"ITC Franklin Gothic\\", Arial, sans-serif;"' \
-                       ',"fontBody":"Arial, \\"Helvetica Neue\\", Helvetica, sans-serif;"' \
-                       ',"lightboxStyle":' + timeline_settings["lightboxStyle"] + \
-                       ',"showControls":' + timeline_settings["showControls"] + \
-                       ',"lazyLoading":' + timeline_settings["lazyLoading"] + \
-                       ',"expander":"2"' \
-                       ',"settings3d":"' + timeline_settings["3Dstatus"] + ',' + \
-                       timeline_colors["3Dcolor"] + ',' + \
-                       timeline_settings["3Dzoom"] + ',' + \
-                       timeline_settings["3Dpanelsize"] + ',' + \
-                       timeline_settings["3Dvanishpoint"] + ',' + \
-                       timeline_settings["3Dtimelinewidth"] + ',' + \
-                       timeline_settings["3Ddirection"] + ',' + \
-                       timeline_settings["3Dsections"] + ',' + \
-                       timeline_settings["3Dbgimageopacity"] + \
-                       '","bgStyle":"0","bgScale":100,"categories":['
-    # Includes the categories as strings in the metadata
-    for count, category in enumerate(timeline_categories):
-        opening_metadata += str(category)
-        if count != len(timeline_categories) - 1:
-            opening_metadata += ","
-    # Adds the last of the needed opening metadata
-    opening_metadata += '],"feeds":[],"stories":['
+    metadata["settings3d"] = ",".join((str(x) for x in metadata["settings3d"]))
 
-    # Indents the metadata according to commas between attributes
-    # opening_metadata = re.sub(re.compile(r'({|,|\[)\s?("|{)'), u"\g<1>\n\t\g<2>", opening_metadata)
-    # Adds spaces after colons that are after quotes
-    # opening_metadata = re.sub(re.compile(r'":'), u"\": ", opening_metadata)
+    metadata["categories"] = json.loads("[" + ",".join((str(x) for x in timeline_categories)) + "]")
+    metadata["spans"] = json.loads("[" + ",".join((str(x) for x in timeline_spans)) + "]")
+    metadata["tags"] = json.loads("[" + ",".join((str(x) for x in timeline_tags)) + "]")
+    metadata["stories"] = json.loads("[" + ",".join((str(x) for x in event_list)) + "]")
 
-    # String printed at closing_metadata of file
-    closing_metadata = '\n\t],\n\t"spans": ['
-    # Includes the spans as strings in the metadata
-    for count, span in enumerate(timeline_spans):
-        closing_metadata += str(span)
-        if count != len(timeline_spans) - 1:
-            closing_metadata += ","
-
-    closing_metadata += '\n\t],\n\t"tags": ['
-    # Includes the tags as strings in the metadata
-    for count, tag in enumerate(timeline_tags):
-        closing_metadata += str(tag)
-        if count != len(timeline_tags) - 1:
-            closing_metadata += ","
-    closing_metadata += "\n\t]\n}"
-
-    return opening_metadata, event_list, closing_metadata
+    # print(json.dumps(metadata))
+    return metadata
 
 
 def settings():
@@ -266,18 +238,19 @@ def settings():
                 name, value = setting
                 try:
                     # TODO: change this if problem
-                    value = float(value)
+                    value = float(value) if '.' in value else int(value)
                 except ValueError:
                     pass
                 # Calls the Media constructor if it is one of the image settings
                 if "Image" in line:
                     # Creates a list, and iterates over it using the list items as args
-                    value = Media(*(value.replace('"', '').split(",")))
+                    value = Media(re.split("\s*,\s*", value)[0], media_credit = re.split("\s*,\s*", value)[1])
                 settings[name] = value
 
             else:
                 raise ValueError("Setting in unknown section {} in settings file".format(cur_section))
 
+    # print(settings)
     return categories, tags, colors, settings
 
 
@@ -377,7 +350,7 @@ def get_events(csv_input):
                 thumb_pos = media_cell[2] if len(media_cell) == 3 else ""
                 # Catches invalid file names
                 try:
-                    media_object = Media(media_cell[0], media_cell[1], thumb_pos)
+                    media_object = Media(media_cell[0], media_cell[1], thumb_pos, True)
                 except (FileNotFoundError, ValueError, IndexError) as error:
                     print("ID {}: {}".format(NUM_ID, error))
                     ERROR_COUNT += 1
@@ -451,17 +424,14 @@ def format_text_block(replace_str):
     :rtype: string
     :return: A string with the user defined values replaced by the timeline specific ones
     """
-    # Escapes special and newline chars
-    string = json.dumps(replace_str)
-    # Add shorthand text you would use often in the
-    # Title, Subtitle, or Description attributes
+    # Add shorthand text you would use often in the Title, Subtitle, or Description attributes
     modifiers = {
         "&tab;": "&nbsp;&nbsp;&nbsp;&nbsp;",
-        "\\n"  : ";xNLx;"
+        "\n"   : ";xNLx;"
     }
     for key, value in modifiers.items():
-        string = string.replace(key, value)
-    return string
+        replace_str = replace_str.replace(key, value)
+    return replace_str
 
 
 class Event:
@@ -494,21 +464,23 @@ class Event:
         """
         Returns event as a string that is friendly with Tiki-Toki software
         """
-        return '{' + \
-               '"id": {}'.format(self.id) + \
-               ',"ownerId": "100"' + \
-               ',"ownerName": ""' + \
-               ',"title": ' + self.title + \
-               ',"startDate": "{}"'.format(self.start_date) + \
-               ',"endDate": "{}"'.format(self.end_date) + \
-               ',"text": ' + self.subtitle + \
-               ',"fullText": ' + self.fulldesc + \
-               ',"category": {}'.format(self.category) + \
-               ',"dateFormat": "auto"' + \
-               ',"externalLink": ""' + \
-               ',"media": [{}]'.format(self.media) + \
-               ',"tags": "{}"'.format(self.tag) + \
-               '}'
+        event_data = {
+            "id"          : self.id,
+            "title"       : self.title,
+            "startDate"   : self.start_date,
+            "endDate"     : self.end_date,
+            "text"        : self.subtitle,
+            "fullText"    : self.fulldesc,
+            "category"    : self.category,
+            "tags"        : str(self.tag),
+            "dateFormat"  : "auto",
+            "externalLink": "",
+            "media"       : [],
+            "ownerId"     : "100",
+            "ownerName"   : ""
+        }
+        if self.media: event_data["media"].append(eval(repr(self.media)))
+        return json.dumps(event_data)
 
 
 class Category:
@@ -560,15 +532,16 @@ class Category:
         """
         Returns the full category description, to be used in the opening metadata
         """
-        return '{' + \
-               '"id":{}'.format(self.category_int) + \
-               ',"title":' + json.dumps(self.str_name) + \
-               ',"colour":"{}"'.format(self.color) + \
-               ',"layout":"0"' + \
-               ',"rows":"3"' + \
-               ',"order":"10"' + \
-               ',"size":"10"' + \
-               '}'
+        cat_data = {
+            "id"    : self.category_int,
+            "title" : self.str_name,
+            "colour": str(self.color),
+            "layout": "0",
+            "rows"  : "3",
+            "order" : "10",
+            "size"  : "10"
+        }
+        return json.dumps(cat_data)
 
 
 class Tag:
@@ -610,15 +583,16 @@ class Tag:
             else:
                 raise KeyError('ID {}: Tag "{}" is undefined.'.format(NUM_ID, self.str_name))
 
-    def __str__(self):
+    def __repr__(self):
         """
         Returns the full tag description, to be used in the closing metadata
         """
         if not self.str_name: return ""
-        return '{' + \
-               '"id": {}'.format(self.tag_int) + \
-               ',"text": ' + json.dumps(self.str_name) + \
-               '}'
+        tag_data = {
+            "id"  : self.tag_int,
+            "text": self.str_name
+        }
+        return json.dumps(tag_data)
 
 
 class Span:
@@ -656,22 +630,26 @@ class Span:
         self.opacity = opacity
         self.text_color = text_color
 
-    def __str__(self):
-        return '{' + \
-               '"id": {}'.format(self.id) + \
-               ',"start": "{}"'.format(self.start_date) + \
-               ',"end": "{}"'.format(self.end_date) + \
-               ',"title": ' + json.dumps(self.title) + \
-               ',"image": "{}"'.format(self.bgimage.media_name) + \
-               ',"imageDataUri": "{}"'.format(self.bgimage.media_data_uri) + \
-               ',"color": "{}"'.format(self.bgcolor) + \
-               ',"opacity": "{}"'.format(self.opacity) + \
-               ',"showText": {}'.format(Span.SHOW_TEXT) + \
-               ',"textColor": "{}"'.format(self.text_color) + \
-               ',"imageCredit": "{}"'.format(self.bgimage.media_credit) + \
-               ',"style": {}'.format(Span.STYLE) + \
-               ',"showInSlider": {}'.format(Span.SHOW_IN_SLIDER) + \
-               '}'
+    def __repr__(self):
+        """
+
+        """
+        span_data = {
+            "id"          : self.id,
+            "start"       : datetime.strftime(self.start_date, "%Y-%m-%d %H:%M:%S"),
+            "end"         : datetime.strftime(self.end_date, "%Y-%m-%d %H:%M:%S"),
+            "title"       : self.title,
+            "image"       : self.bgimage.media_name,
+            "imageDataUri": str(self.bgimage.media_data_uri),
+            "imageCredit" : self.bgimage.media_credit,
+            "color"       : str(self.bgcolor),
+            "opacity"     : str(self.opacity),
+            "textColor"   : str(self.text_color),
+            "showText"    : Span.SHOW_TEXT,
+            "style"       : Span.STYLE,
+            "showInSlider": Span.SHOW_IN_SLIDER
+        }
+        return json.dumps(span_data)
 
 
 class Media:
@@ -716,7 +694,7 @@ class Media:
         self.media_name = media_name
         # Prevents empty media objects from incrementing media id, and from throwing an error
         # Also prevents this for images used anywhere else, such as in a span or the intro 
-        if increment:
+        if increment and media_name:
             # Increments the media ID
             Media.MEDIA_ID += 1
             try:
@@ -736,30 +714,30 @@ class Media:
         self.media_data_uri = self.get_base64_encoding()
         self.media_credit = media_credit
 
-    def __str__(self):
+    def __repr__(self):
         """
         Turns media object into string compatible with the software.
         Only valid when using with the event data
         """
-        if not self.media_name: return ""
+        if not self.media_name: return '""'
         media_src = self.media_name
         # Appends LocalFile:// to the media source if the file is Audio
         if self.media_type == "Audio":
             media_src = "LocalFile://" + media_src
-        media_str = '{' + \
-                    '"id": {}'.format(self.media_id) + \
-                    ',"src": "' + media_src + \
-                    '","caption": "' + self.media_caption + \
-                    '","type": "' + self.media_type + \
-                    '","thumbPosition": "' + self.media_thumb_position + \
-                    '","externalMediaThumb": "' + self.external_media_thumb + \
-                    '","externalMediaType": "' + self.external_media_type + \
-                    '","externalMediaId": "' + self.external_media_type + \
-                    '","orderIndex": 10' + \
-                    ',"mediaDataUri": ' + self.media_data_uri + \
-                    '",\t"bookmarkData": ""' + \
-                    '}'
-        return media_str
+        media_data = {
+            "id"                : self.media_id,
+            "src"               : media_src,
+            "caption"           : self.media_caption,
+            "type"              : self.media_type,
+            "thumbPosition"     : self.media_thumb_position,
+            "externalMediaThumb": self.external_media_thumb,
+            "externalMediaType" : self.external_media_type,
+            "externalMediaId"   : self.external_media_type,
+            "orderIndex"        : 10,
+            "mediaDataUri"      : self.media_data_uri,
+            "bookmarkData"      : ""
+        }
+        return json.dumps(media_data)
 
     def get_media_type(self):
         """
@@ -824,7 +802,7 @@ class Media:
         # Encodes the image, and converts it to a string
         encoding = str(base64.b64encode(open_media_thumbnail.read()))
         # Strips the quotes and the leading r
-        data_uri = "\"data:image/" + Media.IMAGE_EXTENSION + ";base64," + encoding[1:].strip("\'")
+        data_uri = "data:image/" + Media.IMAGE_EXTENSION + ";base64," + encoding[1:].strip("\'")
         return data_uri
 
 
@@ -839,11 +817,11 @@ class Color:
         self.color = color
         # Matches valid color codes, excluding codes of only 2 characters
         if re.match('^#?(?:[0-9a-fA-F]{3}){1,2}$', color) is None:
-            raise ValueError
+            raise ValueError(color + " is not a valid color code")
 
-    def __str__(self):
+    def __repr__(self):
         return self.color
 
 
 # This runs the python script
-write_tki_file_from(sys.argv[1:], False)
+write_tki_file_from(sys.argv[1:], True)
