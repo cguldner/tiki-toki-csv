@@ -8,11 +8,11 @@ This is a Python script for the Tiki Toki timeline software that allows you to c
 
 ----------
 
-##Getting set up
-###Requirements
+## Getting set up
+### Requirements
 Python 3.0+
 
-###How to use
+### How to use
 Most of the "heavy" work is going to be making sure your CSV file is in a format that the reader is expecting. You will also need to create a *settings.txt* file, you can look at the provided file for an example.
 
 Once this has been done, simply run the file
@@ -49,7 +49,7 @@ All of the objects have a fairly decent documentation for you to learn more abou
 
 ----------
 
-##Assumptions
+## Assumptions
 
  1. All images have `.jpg` extension, and all audio files have `.mp3` extensions
  2. All audio files are stored in `\res`
@@ -60,7 +60,7 @@ All of the objects have a fairly decent documentation for you to learn more abou
 
 ----------
 
-##Tools
+## Tools
 **Sort_and_Export.bas** - This is an Microsoft Excel VBA Bash script for use with an .xlsm file that does a couple different functions.
 
  - Sorts the entries based on the date
